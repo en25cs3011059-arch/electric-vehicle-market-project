@@ -6,7 +6,7 @@
 ---
 
 ## 📸 Dashboard Preview
-👉  https://github.com/en25cs3011059-arch/electric-vehicle-market-project/blob/main/Ev%20Dashboard%20preview.png
+👉  
 
 ---
 
@@ -21,4 +21,3 @@
 ## 🛠️ Data & Tools Used
 * **Data Source:** `data/dataset.csv` (500 records)
 * **Tools:** Tableau Desktop, Tableau Public, Python (Pandas)
-*
