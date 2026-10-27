@@ -6,7 +6,7 @@
 ---
 
 ## 📸 Dashboard Preview
-👉  
+👉  DASHBOARDPREVIEW.png
 
 ---
 
