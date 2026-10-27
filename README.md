@@ -9,10 +9,10 @@
 ---
 
 ## 📸 Dashboard Preview
-👉   https://github.com/en25cs3011059-arch/electric-vehicle-market-project/blob/main/DASHBOARDPREVIEW.png
+👉 https://github.com/en25cs3011059-arch/electric-vehicle-market-project/blob/main/DASHBOARDPREVIEW.png
 
-##  Demo Video
-
+## 📸 Demo Video
+👉 https://github.com/en25cs3011059-arch/electric-vehicle-market-project/blob/main/DEM0%20Video.mp4
 ---
 
 ## 📊 Visualizations Included
