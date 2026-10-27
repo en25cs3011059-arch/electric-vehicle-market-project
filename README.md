@@ -6,7 +6,7 @@
 ---
 
 ## 📸 Dashboard Preview
-      Ev Dashboard preview.png
+👉  https://github.com/en25cs3011059-arch/electric-vehicle-market-project/blob/main/Ev%20Dashboard%20preview.png
 
 ---
 
