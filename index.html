@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Market Performance & Insights Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b'
+                        },
+                        darkbg: '#0b0f19',
+                        glass: 'rgba(17, 24, 39, 0.7)',
+                        glassborder: 'rgba(255, 255, 255, 0.08)'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tableau JS API -->
+    <script type="text/javascript" src="https://public.tableau.com/javascripts/api/tableau-2.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            min-height: 100vh;
+        }
+        
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(11, 15, 25, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(16, 185, 129, 0.6);
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300">
+
+    <!-- Top Navigation Bar -->
+    <nav class="sticky top-0 z-50 glass-panel border-b border-gray-800 px-4 py-3 sm:px-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-brand-500/20 text-brand-400 rounded-xl border border-brand-500/30">
+                    <i data-lucide="zap" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-gray-200 to-brand-400 bg-clip-text text-transparent">
+                        ElectroPulse Analytics
+                    </h1>
+                    <p class="text-xs text-gray-400">Global EV Market Insights & Performance</p>
+                </div>
+            </div>
+
+            <!-- Quick Stats / Actions -->
+            <div class="flex items-center space-x-3">
+                <!-- Data Year Selector -->
+                <select id="yearFilter" onchange="applyFilters()" class="bg-gray-800/80 border border-gray-700 text-xs sm:text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-brand-500 focus:outline-none text-gray-200">
+                    <option value="2026" selected>FY 2026</option>
+                    <option value="2025">FY 2025</option>
+                    <option value="2024">FY 2024</option>
+                </select>
+
+                <!-- Export Data Button -->
+                <button onclick="exportReport()" class="hidden sm:flex items-center space-x-2 bg-brand-600 hover:bg-brand-500 text-white text-xs sm:text-sm font-medium px-3.5 py-1.5 rounded-lg transition-all shadow-lg shadow-brand-600/20">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Export Insights</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6">
+
+        <!-- Global Filter Bar -->
+        <div class="glass-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-2 text-brand-400 font-semibold text-sm">
+                <i data-lucide="sliders" class="w-4 h-4"></i>
+                <span>Market Filters:</span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 flex-grow max-w-4xl">
+                <!-- Region Filter -->
+                <div class="relative flex-1 min-w-[140px]">
+                    <select id="regionFilter" onchange="applyFilters()" class="w-full bg-gray-900/80 border border-gray-700/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-300 focus:border-brand-500 focus:outline-none">
+                        <option value="all">All Regions</option>
+                        <option value="North America">North America</option>
+                        <option value="Europe">Europe</option>
+                        <option value="Asia Pacific">Asia Pacific</option>
+                    </select>
+                </div>
+
+                <!-- EV Type Filter -->
+                <div class="relative flex-1 min-w-[140px]">
+                    <select id="typeFilter" onchange="applyFilters()" class="w-full bg-gray-900/80 border border-gray-700/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-300 focus:border-brand-500 focus:outline-none">
+                        <option value="all">All Powertrains</option>
+                        <option value="BEV">BEV (Battery Electric)</option>
+                        <option value="PHEV">PHEV (Plug-in Hybrid)</option>
+                        <option value="FCEV">FCEV (Fuel Cell)</option>
+                    </select>
+                </div>
+
+                <!-- Search Input -->
+                <div class="relative flex-1 min-w-[180px]">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-gray-400"></i>
+                    <input type="text" id="searchInput" onkeyup="applyFilters()" placeholder="Search brand or model..." class="w-full bg-gray-900/80 border border-gray-700/80 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-gray-300 placeholder-gray-500 focus:border-brand-500 focus:outline-none">
+                </div>
+            </div>
+
+            <button onclick="resetFilters()" class="text-xs text-gray-400 hover:text-brand-400 underline transition-all">
+                Reset Filters
+            </button>
+        </div>
+
+        <!-- Metric KPI Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <!-- Metric 1 -->
+            <div class="glass-panel rounded-2xl p-5 hover:border-brand-500/40 transition-all duration-300 group">
+                <div class="flex items-center justify-between text-gray-400 mb-2">
+                    <span class="text-xs font-medium uppercase tracking-wider">Total EV Deliveries</span>
+                    <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg group-hover:scale-110 transition-transform">
+                        <i data-lucide="car" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline justify-between">
+                    <h3 class="text-2xl font-bold text-white" id="kpiSales">18.4M</h3>
+                    <span class="inline-flex items-center text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                        <i data-lucide="arrow-up-right" class="w-3 h-3 mr-1"></i> +28.4%
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">vs. previous annual period</p>
+            </div>
+
+            <!-- Metric 2 -->
+            <div class="glass-panel rounded-2xl p-5 hover:border-brand-500/40 transition-all duration-300 group">
+                <div class="flex items-center justify-between text-gray-400 mb-2">
+                    <span class="text-xs font-medium uppercase tracking-wider">Market Penetration</span>
+                    <div class="p-2 bg-blue-500/10 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
+                        <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline justify-between">
+                    <h3 class="text-2xl font-bold text-white" id="kpiShare">22.8%</h3>
+                    <span class="inline-flex items-center text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                        <i data-lucide="arrow-up-right" class="w-3 h-3 mr-1"></i> +4.2%
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">of total global auto market</p>
+            </div>
+
+            <!-- Metric 3 -->
+            <div class="glass-panel rounded-2xl p-5 hover:border-brand-500/40 transition-all duration-300 group">
+                <div class="flex items-center justify-between text-gray-400 mb-2">
+                    <span class="text-xs font-medium uppercase tracking-wider">Active Charging Stations</span>
+                    <div class="p-2 bg-amber-500/10 text-amber-400 rounded-lg group-hover:scale-110 transition-transform">
+                        <i data-lucide="battery-charging" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline justify-between">
+                    <h3 class="text-2xl font-bold text-white" id="kpiChargers">3.92M</h3>
+                    <span class="inline-flex items-center text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                        <i data-lucide="arrow-up-right" class="w-3 h-3 mr-1"></i> +35.1%
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">public fast & standard ports</p>
+            </div>
+
+            <!-- Metric 4 -->
+            <div class="glass-panel rounded-2xl p-5 hover:border-brand-500/40 transition-all duration-300 group">
+                <div class="flex items-center justify-between text-gray-400 mb-2">
+                    <span class="text-xs font-medium uppercase tracking-wider">Avg Battery Cost / kWh</span>
+                    <div class="p-2 bg-purple-500/10 text-purple-400 rounded-lg group-hover:scale-110 transition-transform">
+                        <i data-lucide="dollar-sign" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline justify-between">
+                    <h3 class="text-2xl font-bold text-white" id="kpiCost">$108</h3>
+                    <span class="inline-flex items-center text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                        <i data-lucide="arrow-down-right" class="w-3 h-3 mr-1"></i> -11.2%
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">pack-level cell pricing</p>
+            </div>
+        </div>
+
+        <!-- Tableau Interactive Dashboard Section -->
+        <div class="glass-panel rounded-2xl p-6 border border-gray-800">
+            <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-4 border-b border-gray-800 gap-2">
+                <div>
+                    <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5 text-brand-400"></i>
+                        Tableau Interactive Analytics Embed
+                    </h2>
+                    <p class="text-xs text-gray-400">Deep dive into sales distribution, OEM market shares, and historical growth trajectory.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="reloadTableau()" class="text-xs flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg transition-all border border-gray-700">
+                        <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+                        <span>Refresh Viz</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tableau Embed Container -->
+            <div class="w-full rounded-xl overflow-hidden bg-gray-950/60 min-h-[550px] relative border border-gray-800/80 flex items-center justify-center">
+                <!-- Loading Skeleton / Spinner -->
+                <div id="tableauSpinner" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-950/90 z-10 transition-opacity duration-500">
+                    <div class="w-10 h-10 border-4 border-brand-500/20 border-t-brand-400 rounded-full animate-spin mb-3"></div>
+                    <span class="text-sm text-gray-400 font-medium">Loading Tableau Public Viz...</span>
+                </div>
+                
+                <!-- Target Div for Tableau Embed -->
+                <div id="tableauViz" class="w-full h-[600px] z-0"></div>
+            </div>
+        </div>
+
+        <!-- Secondary Analytics Section: Native Charts & OEM Leaderboard -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Regional Breakdown Chart -->
+            <div class="glass-panel rounded-2xl p-5 lg:col-span-2 flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Regional EV Market Growth Trends</h3>
+                        <p class="text-xs text-gray-400">Quarterly unit sales by top global markets (2025 - 2026)</p>
+                    </div>
+                    <span class="text-xs text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded-full border border-brand-500/20">Live Trends</span>
+                </div>
+                <div class="h-[300px] w-full">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top OEM Manufacturer Leaderboard -->
+            <div class="glass-panel rounded-2xl p-5 flex flex-col">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-800">
+                    <h3 class="text-base font-semibold text-white">Top OEMs Leaderboard</h3>
+                    <span class="text-xs text-gray-400">Share %</span>
+                </div>
+
+                <div class="space-y-4 overflow-y-auto max-h-[290px] pr-1" id="oemList">
+                    <!-- OEM Item 1 -->
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-800/40 hover:bg-gray-800/70 transition-all border border-gray-800">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-6 h-6 flex items-center justify-center bg-brand-500/20 text-brand-400 font-bold text-xs rounded-lg">1</span>
+                            <div>
+                                <h4 class="text-sm font-medium text-white">BYD Auto</h4>
+                                <p class="text-xs text-gray-400">3.02M units sold</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-bold text-emerald-400">21.8%</span>
+                    </div>
+
+                    <!-- OEM Item 2 -->
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-800/40 hover:bg-gray-800/70 transition-all border border-gray-800">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-6 h-6 flex items-center justify-center bg-gray-700/50 text-gray-300 font-bold text-xs rounded-lg">2</span>
+                            <div>
+                                <h4 class="text-sm font-medium text-white">Tesla Inc.</h4>
+                                <p class="text-xs text-gray-400">1.81M units sold</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-bold text-emerald-400">14.2%</span>
+                    </div>
+
+                    <!-- OEM Item 3 -->
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-800/40 hover:bg-gray-800/70 transition-all border border-gray-800">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-6 h-6 flex items-center justify-center bg-gray-700/50 text-gray-300 font-bold text-xs rounded-lg">3</span>
+                            <div>
+                                <h4 class="text-sm font-medium text-white">Geely Group</h4>
+                                <p class="text-xs text-gray-400">1.15M units sold</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-bold text-emerald-400">8.9%</span>
+                    </div>
+
+                    <!-- OEM Item 4 -->
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-800/40 hover:bg-gray-800/70 transition-all border border-gray-800">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-6 h-6 flex items-center justify-center bg-gray-700/50 text-gray-300 font-bold text-xs rounded-lg">4</span>
+                            <div>
+                                <h4 class="text-sm font-medium text-white">Volkswagen Group</h4>
+                                <p class="text-xs text-gray-400">0.98M units sold</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-bold text-emerald-400">7.5%</span>
+                    </div>
+
+                    <!-- OEM Item 5 -->
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-800/40 hover:bg-gray-800/70 transition-all border border-gray-800">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-6 h-6 flex items-center justify-center bg-gray-700/50 text-gray-300 font-bold text-xs rounded-lg">5</span>
+                            <div>
+                                <h4 class="text-sm font-medium text-white">Hyundai-Kia</h4>
+                                <p class="text-xs text-gray-400">0.74M units sold</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-bold text-emerald-400">5.8%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center text-xs text-gray-500 py-6 border-t border-gray-800">
+            <p>© 2026 ElectroPulse Market Intelligence. Embedded Tableau Visualization & Data Analytics Platform.</p>
+        </footer>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 border border-brand-500/50 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <i data-lucide="check-circle" class="w-5 h-5 text-brand-400"></i>
+        <span id="toastMsg" class="text-xs sm:text-sm">Action performed successfully!</span>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Tableau Embedding Logic
+        let viz;
+        const containerDiv = document.getElementById("tableauViz");
+        // Your Tableau Public Dashboard URL
+        const vizUrl = "https://public.tableau.com/views/VishalEvproject/Dashboard1";
+        
+        const options = {
+            hideTabs: true,
+            hideToolbar: true,
+            width: "100%",
+            height: "100%",
+            onFirstInteractive: function () {
+                document.getElementById("tableauSpinner").classList.add("opacity-0");
+                setTimeout(() => {
+                    document.getElementById("tableauSpinner").style.display = "none";
+                }, 500);
+            }
+        };
+
+        function initTableau() {
+            if (viz) { viz.dispose(); }
+            document.getElementById("tableauSpinner").style.display = "flex";
+            document.getElementById("tableauSpinner").classList.remove("opacity-0");
+            viz = new tableau.Viz(containerDiv, vizUrl, options);
+        }
+
+        function reloadTableau() {
+            initTableau();
+            showToast("Tableau dashboard reloaded!");
+        }
+
+        // Initialize Chart.js Regional Growth Chart
+        let ctx = document.getElementById('growthChart').getContext('2d');
+        let growthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Q1 2025', 'Q2 2025', 'Q3 2025', 'Q4 2025', 'Q1 2026', 'Q2 2026', 'Q3 2026'],
+                datasets: [
+                    {
+                        label: 'Asia Pacific',
+                        data: [2.1, 2.5, 2.9, 3.4, 3.8, 4.2, 4.6],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Europe',
+                        data: [1.2, 1.4, 1.5, 1.8, 1.9, 2.1, 2.3],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'transparent',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'North America',
+                        data: [0.8, 0.9, 1.1, 1.3, 1.4, 1.6, 1.8],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'transparent',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#9ca3af', font: { family: 'Inter', size: 12 } }
+                    }
+                },
+                scales: {
+                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af' } },
+                    y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af' } }
+                }
+            }
+        });
+
+        // Interactive Filter Simulator
+        function applyFilters() {
+            const region = document.getElementById("regionFilter").value;
+            const type = document.getElementById("typeFilter").value;
+            showToast(`Applied filters: Region [${region}], Type [${type}]`);
+        }
+
+        function resetFilters() {
+            document.getElementById("regionFilter").value = "all";
+            document.getElementById("typeFilter").value = "all";
+            document.getElementById("searchInput").value = "";
+            showToast("Filters reset to default.");
+        }
+
+        // Export Functionality
+        function exportReport() {
+            showToast("Exporting EV Market Report as PDF/CSV...");
+        }
+
+        // Toast Notification Helper
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            const toastMsg = document.getElementById("toastMsg");
+            toastMsg.innerText = message;
+            toast.classList.remove("translate-y-20", "opacity-0");
+            setTimeout(() => {
+                toast.classList.add("translate-y-20", "opacity-0");
+            }, 3000);
+        }
+
+        // Load Tableau on page ready
+        window.addEventListener("DOMContentLoaded", initTableau);
+    </script>
+</body>
+</html>
