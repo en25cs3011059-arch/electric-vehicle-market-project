@@ -12,7 +12,7 @@
 👉 https://github.com/en25cs3011059-arch/electric-vehicle-market-project/blob/main/DASHBOARDPREVIEW.png
 
 ## 📸 Demo Video
-👉 https://github.com/en25cs3011059-arch/electric-vehicle-market-project/blob/main/DEM0%20Video.mp4
+👉  https://drive.google.com/file/d/1VG0PPR4ZjE_WNbqDOY_ZcJ5TKmUN4t0i/view?usp=sharing
 ---
 
 ## 📊 Visualizations Included
